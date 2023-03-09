@@ -1,18 +1,15 @@
 package hu.tothlp.sshanyi
 
 import com.github.ajalt.clikt.core.CliktCommand
-import com.github.ajalt.clikt.parameters.options.*
-import com.github.ajalt.clikt.parameters.types.int
+import com.github.ajalt.clikt.core.subcommands
 
-class Hello : CliktCommand() {
-    val count: Int by option(help="Number of greetings").int().default(1)
-    val name: String by option(help="The person to greet").prompt("Your name")
+class SSHanyi : CliktCommand() {
 
     override fun run() {
-        repeat(count) {
-            echo("Hello $name!")
-        }
+        SSHanyi().commandHelp
     }
 }
 
-fun main(args: Array<String>) = Hello().main(args)
+fun main(args: Array<String>) = SSHanyi().subcommands(
+    List()
+).main(args)

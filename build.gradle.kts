@@ -30,6 +30,8 @@ kotlin {
         val nativeMain by getting {
             dependencies {
                 implementation("com.github.ajalt.clikt:clikt:3.5.2")
+                implementation("com.squareup.okio:okio:3.3.0")
+
             }
         }
 
