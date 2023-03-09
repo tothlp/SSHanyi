@@ -20,7 +20,7 @@ class List: CliktCommand(help="List configuration entries") {
     private val config: String by option(help = "Path for the configuration file.").default(getDefaultConfig())
 
     init {
-        context { helpFormatter = CliktHelpFormatter(showDefaultValues = true) }
+        context { helpFormatter = CliktHelpFormatter(showDefaultValues = true, width = 120) }
     }
 
     override fun run() {
