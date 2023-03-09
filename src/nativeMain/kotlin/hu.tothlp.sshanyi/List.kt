@@ -1,6 +1,8 @@
 package hu.tothlp.sshanyi
 
 import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.core.context
+import com.github.ajalt.clikt.output.CliktHelpFormatter
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
 import okio.FileSystem
@@ -8,19 +10,29 @@ import okio.Path
 import okio.Path.Companion.toPath
 import okio.buffer
 import okio.use
-import platform.windows.GetEnvironmentVariable
+import platform.posix.*
 import kotlin.collections.List
 import kotlin.math.ceil
+import kotlinx.cinterop.*
 
 class List: CliktCommand(help="List configuration entries") {
     private val defaultPadding = 10
-    private val config: String by option(help = "Path for the configuration file.").default("~/config")
+    private val config: String by option(help = "Path for the configuration file.").default(getDefaultConfig())
+
+    init {
+        context { helpFormatter = CliktHelpFormatter(showDefaultValues = true) }
+    }
 
     override fun run() {
         val path = config.toPath()
         if(FileSystem.SYSTEM.exists(path)) readLines(path)
         else echo("The given file does not exist.", err = true)
     }
+
+    private fun getDefaultConfig(): String = when(Platform.osFamily) {
+            OsFamily.WINDOWS -> getenv("USERPROFILE")?.toKString()?.plus("\\.ssh\\config")
+            else -> getenv("HOME")?.toKString()?.plus("/.ssh/config")
+        } ?: ""
 
     private fun readLines(path: Path) {
         var configEntries = mutableListOf<SSHConfig>()
