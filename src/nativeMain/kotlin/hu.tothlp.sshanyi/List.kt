@@ -3,8 +3,7 @@ package hu.tothlp.sshanyi
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.context
 import com.github.ajalt.clikt.output.CliktHelpFormatter
-import com.github.ajalt.clikt.parameters.options.default
-import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.clikt.parameters.options.*
 import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toPath
@@ -15,24 +14,28 @@ import kotlin.collections.List
 import kotlin.math.ceil
 import kotlinx.cinterop.*
 
-class List: CliktCommand(help="List configuration entries") {
+class List : CliktCommand(help = "List configuration entries") {
     private val defaultPadding = 10
-    private val config: String by option(help = "Path for the configuration file.").default(getDefaultConfig())
+    private val config: Path by option(help = "Path for the configuration file.")
+        .convert("FILE") {
+            it.toPath().takeIf { FileSystem.SYSTEM.exists(it) } ?: fail("An existing file is required.")
+        }
+        .default(getDefaultConfig().toPath()).validate {
+            if (!FileSystem.SYSTEM.exists(it)) fail("The default config file ($it) does not exist. Create it, or enter a different file. For more info, see --help")
+        }
 
     init {
         context { helpFormatter = CliktHelpFormatter(showDefaultValues = true, width = 120) }
     }
 
     override fun run() {
-        val path = config.toPath()
-        if(FileSystem.SYSTEM.exists(path)) readLines(path)
-        else echo("The given file does not exist.", err = true)
+        readLines(config)
     }
 
-    private fun getDefaultConfig(): String = when(Platform.osFamily) {
-            OsFamily.WINDOWS -> getenv("USERPROFILE")?.toKString()?.plus("\\.ssh\\config")
-            else -> getenv("HOME")?.toKString()?.plus("/.ssh/config")
-        } ?: ""
+    private fun getDefaultConfig(): String = when (Platform.osFamily) {
+        OsFamily.WINDOWS -> getenv("USERPROFILE")?.toKString()?.plus("\\.ssh\\config")
+        else -> getenv("HOME")?.toKString()?.plus("/.ssh/config")
+    }.orEmpty()
 
     private fun readLines(path: Path) {
         var configEntries = mutableListOf<SSHConfig>()
@@ -43,15 +46,16 @@ class List: CliktCommand(help="List configuration entries") {
                 while (true) {
                     val line = bufferedFileSource.readUtf8Line() ?: break
                     val lineParts = line.trim().replace(Regex("\\s{2,}"), "").split(Regex("\\s"))
-                    if(lineParts.size < 2) continue
+                    if (lineParts.size < 2) continue
                     val configKey = lineParts[0]
                     val configValue = lineParts[1]
 
-                    when(configKey) {
+                    when (configKey) {
                         ConfigName.HOST.value -> {
                             currentConfig = SSHConfig(configValue)
                             configEntries.add(currentConfig!!)
                         }
+
                         ConfigName.HOSTNAME.value -> currentConfig?.hostName = configValue
                         ConfigName.USER.value -> currentConfig?.user = configValue
                         ConfigName.PORT.value -> currentConfig?.port = configValue.toIntOrNull()
@@ -71,10 +75,14 @@ class List: CliktCommand(help="List configuration entries") {
 
     private fun calculateCellWidthData(entries: List<SSHConfig>): Map<ConfigName, Int> {
         val data = mapOf(
-            ConfigName.HOST to entries.mapNotNull { it.host }.plus(ConfigName.HOST.value).map{ it.length }.maxBy { it },
-            ConfigName.HOSTNAME to entries.mapNotNull { it.hostName }.plus(ConfigName.HOSTNAME.value).map{ it.length }.maxBy { it },
-            ConfigName.USER to entries.mapNotNull { it.user }.plus(ConfigName.USER.value).map{ it.length }.maxBy { it },
-            ConfigName.PORT to entries.mapNotNull { it.port.toStringOrEmpty() }.plus(ConfigName.PORT.value).map{ it.length }.maxBy { it },
+            ConfigName.HOST to entries.mapNotNull { it.host }.plus(ConfigName.HOST.value).map { it.length }
+                .maxBy { it },
+            ConfigName.HOSTNAME to entries.mapNotNull { it.hostName }.plus(ConfigName.HOSTNAME.value).map { it.length }
+                .maxBy { it },
+            ConfigName.USER to entries.mapNotNull { it.user }.plus(ConfigName.USER.value).map { it.length }
+                .maxBy { it },
+            ConfigName.PORT to entries.mapNotNull { it.port.toStringOrEmpty() }.plus(ConfigName.PORT.value)
+                .map { it.length }.maxBy { it },
         )
         return data
     }
@@ -83,9 +91,9 @@ class List: CliktCommand(help="List configuration entries") {
         val headers = ConfigName.values().map { it.value.leftText(cellWidthData[it]) }
         val preHeader = ConfigName.values().map { "".leftText(cellWidthData[it], '-') }
 
-        echo(preHeader.joinToString("+","+", postfix = "+"))
-        echo(headers.joinToString("|","|", postfix = "|"))
-        echo(preHeader.joinToString("+","+", postfix = "+"))
+        echo(preHeader.joinToString("+", "+", postfix = "+"))
+        echo(headers.joinToString("|", "|", postfix = "|"))
+        echo(preHeader.joinToString("+", "+", postfix = "+"))
     }
 
     private fun printEntries(entries: List<SSHConfig>, cellWidthData: Map<ConfigName, Int>) {
@@ -94,15 +102,24 @@ class List: CliktCommand(help="List configuration entries") {
         val userPadSize = cellWidthData[ConfigName.USER]
         val portPadSize = cellWidthData[ConfigName.USER]
         val formattedEntries = entries.map {
-            "|${it.host.leftText(hostPadSize)}|${it.hostName.leftText(hostNamePadSize)}|${it.user.leftText(userPadSize)}|${it.port.toStringOrEmpty().rightText(portPadSize)}|"
+            "|${it.host.leftText(hostPadSize)}|${it.hostName.leftText(hostNamePadSize)}|${it.user.leftText(userPadSize)}|${
+                it.port.toStringOrEmpty().rightText(portPadSize)
+            }|"
         }
         formattedEntries.forEach { echo(it) }
 
         val footer = ConfigName.values().map { "".leftText(cellWidthData[it], '-') }
-        echo(footer.joinToString("+","+", postfix = "+"))
+        echo(footer.joinToString("+", "+", postfix = "+"))
     }
 
-    private fun String?.leftText(padSize: Int?, padChar: Char? = ' '): String = this.orEmpty().let {"$padChar$it$padChar".padEnd(ceil((padSize?.takeIf { it > defaultPadding } ?: defaultPadding) *1.3).toInt(), padChar ?: ' ')}
-    private fun String?.rightText(padSize: Int?, padChar: Char? = ' '): String = this.orEmpty().let {"$padChar$it$padChar".padStart(ceil((padSize?.takeIf { it > defaultPadding } ?: defaultPadding) *1.3).toInt(), padChar ?: ' ')}
+    private fun String?.leftText(padSize: Int?, padChar: Char? = ' '): String = this.orEmpty().let {
+        "$padChar$it$padChar".padEnd(ceil((padSize?.takeIf { it > defaultPadding } ?: defaultPadding) * 1.3).toInt(),
+            padChar ?: ' ')
+    }
+
+    private fun String?.rightText(padSize: Int?, padChar: Char? = ' '): String = this.orEmpty().let {
+        "$padChar$it$padChar".padStart(ceil((padSize?.takeIf { it > defaultPadding } ?: defaultPadding) * 1.3).toInt(),
+            padChar ?: ' ')
+    }
 
 }
