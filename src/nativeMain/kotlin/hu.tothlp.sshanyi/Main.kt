@@ -21,9 +21,11 @@ class SSHanyi : CliktCommand(name = "SSHanyi") {
                                |___/   
         """.trimIndent())
         SSHanyi().commandHelp
+        SSHanyi().getFormattedHelp()
     }
 }
 
 fun main(args: Array<String>) = SSHanyi().subcommands(
+    Add(),
     List()
 ).main(args)
