@@ -85,7 +85,7 @@ class List : CliktCommand(help = "List configuration entries") {
         val hostPadSize = cellWidthData[ConfigName.HOST]
         val hostNamePadSize = cellWidthData[ConfigName.HOSTNAME]
         val userPadSize = cellWidthData[ConfigName.USER]
-        val portPadSize = cellWidthData[ConfigName.USER]
+        val portPadSize = cellWidthData[ConfigName.PORT]
         val formattedEntries = entries.map {
             "|${it.host.leftText(hostPadSize)}|${it.hostName.leftText(hostNamePadSize)}|${it.user.leftText(userPadSize)}|${
                 it.port.toStringOrEmpty().rightText(portPadSize)
