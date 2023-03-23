@@ -3,39 +3,25 @@ package hu.tothlp.sshanyi
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.context
 import com.github.ajalt.clikt.output.CliktHelpFormatter
-import com.github.ajalt.clikt.parameters.options.*
+import com.github.ajalt.clikt.parameters.groups.provideDelegate
 import okio.FileSystem
 import okio.Path
-import okio.Path.Companion.toPath
 import okio.buffer
 import okio.use
-import platform.posix.*
 import kotlin.collections.List
 import kotlin.math.ceil
-import kotlinx.cinterop.*
 
 class List : CliktCommand(help = "List configuration entries") {
     private val defaultPadding = 10
-    private val config: Path by option(help = "Path for the configuration file.")
-        .convert("FILE") {
-            it.toPath().takeIf { FileSystem.SYSTEM.exists(it) } ?: fail("An existing file is required.")
-        }
-        .default(getDefaultConfig().toPath()).validate {
-            if (!FileSystem.SYSTEM.exists(it)) fail("The default config file ($it) does not exist. Create it, or enter a different file. For more info, see --help")
-        }
+    private val configOptions by ConfigOptions()
 
     init {
         context { helpFormatter = CliktHelpFormatter(showDefaultValues = true, width = 120) }
     }
 
     override fun run() {
-        readLines(config)
+        readLines(configOptions.config)
     }
-
-    private fun getDefaultConfig(): String = when (Platform.osFamily) {
-        OsFamily.WINDOWS -> getenv("USERPROFILE")?.toKString()?.plus("\\.ssh\\config")
-        else -> getenv("HOME")?.toKString()?.plus("/.ssh/config")
-    }.orEmpty()
 
     private fun readLines(path: Path) {
         var configEntries = mutableListOf<SSHConfig>()
@@ -74,7 +60,7 @@ class List : CliktCommand(help = "List configuration entries") {
     }
 
     private fun calculateCellWidthData(entries: List<SSHConfig>): Map<ConfigName, Int> {
-        val data = mapOf(
+        return mapOf(
             ConfigName.HOST to entries.mapNotNull { it.host }.plus(ConfigName.HOST.value).map { it.length }
                 .maxBy { it },
             ConfigName.HOSTNAME to entries.mapNotNull { it.hostName }.plus(ConfigName.HOSTNAME.value).map { it.length }
@@ -84,7 +70,6 @@ class List : CliktCommand(help = "List configuration entries") {
             ConfigName.PORT to entries.mapNotNull { it.port.toStringOrEmpty() }.plus(ConfigName.PORT.value)
                 .map { it.length }.maxBy { it },
         )
-        return data
     }
 
     private fun printHeaders(cellWidthData: Map<ConfigName, Int>) {
@@ -100,7 +85,7 @@ class List : CliktCommand(help = "List configuration entries") {
         val hostPadSize = cellWidthData[ConfigName.HOST]
         val hostNamePadSize = cellWidthData[ConfigName.HOSTNAME]
         val userPadSize = cellWidthData[ConfigName.USER]
-        val portPadSize = cellWidthData[ConfigName.USER]
+        val portPadSize = cellWidthData[ConfigName.PORT]
         val formattedEntries = entries.map {
             "|${it.host.leftText(hostPadSize)}|${it.hostName.leftText(hostNamePadSize)}|${it.user.leftText(userPadSize)}|${
                 it.port.toStringOrEmpty().rightText(portPadSize)
