@@ -1,5 +1,8 @@
 package hu.tothlp.sshanyi
 
+/**
+ * DTO for storing configuration entries.
+ */
 data class SSHConfig(
     var host: String? = null,
     var hostName: String? = null,
@@ -7,6 +10,9 @@ data class SSHConfig(
     var port: Int? = null
 )
 
+/**
+ * Used to reference config keys easily and coherently.
+ */
 enum class ConfigName(val value: String) {
     HOST("Host"),
     HOSTNAME("HostName"),
@@ -14,4 +20,7 @@ enum class ConfigName(val value: String) {
     PORT("Port"),
 }
 
-fun Int?.toStringOrEmpty(): String = this?.toString() ?: ""
+/**
+ * Returns the String representation of the receiver Int, or empty String if conversion is not possible.
+ */
+fun Int?.toStringOrEmpty(): String = this?.toString().orEmpty()

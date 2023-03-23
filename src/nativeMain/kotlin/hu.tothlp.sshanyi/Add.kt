@@ -2,18 +2,24 @@ package hu.tothlp.sshanyi
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.groups.provideDelegate
-import com.github.ajalt.clikt.parameters.options.convert
-import com.github.ajalt.clikt.parameters.options.option
-import com.github.ajalt.clikt.parameters.options.prompt
-import com.github.ajalt.clikt.parameters.types.int
 import okio.FileSystem
 import okio.buffer
 import okio.use
 
+/**
+ * Subcommand to Add entries to config.
+ *
+ * It opens the SSH config file provided by [config] (or default) then asks for [entryOptions] parameters.
+ * After confirmation, it adds a new entry to config, as set entered in parameters.
+ *
+ * @property config Config file settings
+ * @property entryOptions Setting values for the new entry
+ */
 class Add : CliktCommand(help = "Add entries to configuration") {
 
 	private val config by ConfigOptions()
 	private val entryOptions by EntryOptions()
+
 
 	override fun run() {
 		echo("New config entry:")
@@ -26,6 +32,9 @@ class Add : CliktCommand(help = "Add entries to configuration") {
 		echo("Entry added. Now you can access your server with: ssh ${entryOptions.host}")
 	}
 
+	/**
+	 * Opens the config file for writing, then adds a new entry with the data provided in [entryOptions].
+	 */
 	private fun appendConfig() {
 		FileSystem.SYSTEM.appendingSink(config.config).buffer().use {
 			it.writeUtf8("\n")
