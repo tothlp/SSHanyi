@@ -4,6 +4,8 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.context
 import com.github.ajalt.clikt.output.MordantHelpFormatter
 import com.github.ajalt.clikt.parameters.groups.provideDelegate
+import com.github.ajalt.mordant.terminal.Terminal
+import com.github.ajalt.mordant.table.table
 import okio.FileSystem
 import okio.Path
 import okio.buffer
@@ -21,10 +23,10 @@ class List : CliktCommand(help = "List configuration entries") {
     }
 
     override fun run() {
-        readLines(configOptions.config)
+        readLines(configOptions.config, configOptions.legacy)
     }
 
-    private fun readLines(path: Path) {
+    private fun readLines(path: Path, legacy: Boolean) {
         var configEntries = mutableListOf<SSHConfig>()
         var currentConfig: SSHConfig? = null
 
@@ -51,10 +53,21 @@ class List : CliktCommand(help = "List configuration entries") {
                 }
             }
         }
-        printTable(configEntries)
+        if(legacy) legacyPrintTable(configEntries) else printTable(configEntries)
     }
 
     private fun printTable(entries: List<SSHConfig>) {
+        val terminal = Terminal()
+        terminal.println(table {
+            header {  row(*ConfigName.entries.map { it.value }.toTypedArray()) }
+            body {
+                entries.forEach {
+                    row(it.host, it.hostName, it.user, it.port)
+                }
+            }
+        })
+    }
+    private fun legacyPrintTable(entries: List<SSHConfig>) {
         val cellWidthData = calculateCellWidthData(entries)
         printHeaders(cellWidthData)
         printEntries(entries, cellWidthData)

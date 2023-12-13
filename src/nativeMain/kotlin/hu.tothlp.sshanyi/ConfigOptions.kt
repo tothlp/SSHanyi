@@ -1,10 +1,7 @@
 package hu.tothlp.sshanyi
 
 import com.github.ajalt.clikt.parameters.groups.OptionGroup
-import com.github.ajalt.clikt.parameters.options.convert
-import com.github.ajalt.clikt.parameters.options.default
-import com.github.ajalt.clikt.parameters.options.option
-import com.github.ajalt.clikt.parameters.options.validate
+import com.github.ajalt.clikt.parameters.options.*
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.toKString
 import okio.FileSystem
@@ -29,6 +26,8 @@ class ConfigOptions() : OptionGroup("Config file options") {
 		.default(getDefaultConfig().toPath()).validate {
 			if (!FileSystem.SYSTEM.exists(it)) fail("The default config file ($it) does not exist. Create it, or enter a different file. For more info, see --help")
 		}
+
+	val legacy by option("--legacy", "-l", help = "Use legacy printing").flag( default = false)
 
 	/**
 	 * Gets the path for the default SSH config. It reads the current user folder from the proper environment variable, based on the current [Platform.osFamily]
