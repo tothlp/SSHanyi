@@ -2,6 +2,8 @@ package hu.tothlp.sshanyi
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.groups.provideDelegate
+import com.github.ajalt.mordant.terminal.Terminal
+import com.github.ajalt.mordant.terminal.YesNoPrompt
 import okio.FileSystem
 import okio.buffer
 import okio.use
@@ -27,9 +29,11 @@ class Add : CliktCommand(help = "Add entries to configuration") {
 		echo("\tHostName: ${entryOptions.hostName}")
 		entryOptions.user?.let { echo("\tUser: $it") }
 		entryOptions.port?.let { echo("\tPort: $it") }
-		confirm("A new entry will be added to your ${config.config} file. Continue?", abort = true)
-		appendConfig()
-		echo("Entry added. Now you can access your server with: ssh ${entryOptions.host}")
+		val terminal = Terminal()
+		if (YesNoPrompt("A new entry will be added to your ${config.config} file. Continue?",terminal).ask() == true) {
+			appendConfig()
+			echo("Entry added. Now you can access your server with: ssh ${entryOptions.host}")
+		}
 	}
 
 	/**

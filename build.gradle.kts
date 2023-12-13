@@ -1,5 +1,5 @@
 plugins {
-    kotlin("multiplatform") version "1.8.0"
+    kotlin("multiplatform") version "1.9.21"
 }
 
 group = "hu.tothlp"
@@ -29,12 +29,17 @@ kotlin {
     sourceSets {
         val nativeMain by getting {
             dependencies {
-                implementation("com.github.ajalt.clikt:clikt:3.5.2")
-                implementation("com.squareup.okio:okio:3.3.0")
+                implementation("com.github.ajalt.clikt:clikt:4.2.0")
+                implementation("com.squareup.okio:okio:3.6.0")
 
             }
         }
 
         val nativeTest by getting
     }
+}
+
+tasks.withType<Wrapper> {
+    gradleVersion = "8.1.1"
+    distributionType = Wrapper.DistributionType.BIN
 }

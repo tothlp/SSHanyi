@@ -2,7 +2,7 @@ package hu.tothlp.sshanyi
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.context
-import com.github.ajalt.clikt.output.CliktHelpFormatter
+import com.github.ajalt.clikt.output.MordantHelpFormatter
 import com.github.ajalt.clikt.parameters.groups.provideDelegate
 import okio.FileSystem
 import okio.Path
@@ -16,7 +16,8 @@ class List : CliktCommand(help = "List configuration entries") {
     private val configOptions by ConfigOptions()
 
     init {
-        context { helpFormatter = CliktHelpFormatter(showDefaultValues = true, width = 120) }
+        context { helpFormatter = {MordantHelpFormatter(it) }
+        }
     }
 
     override fun run() {

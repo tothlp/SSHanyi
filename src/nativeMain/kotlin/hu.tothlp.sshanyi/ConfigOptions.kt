@@ -5,11 +5,13 @@ import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.validate
+import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.toKString
 import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toPath
 import platform.posix.getenv
+import kotlin.experimental.ExperimentalNativeApi
 
 /**
  * Common configuration options for subcommands.
@@ -31,6 +33,7 @@ class ConfigOptions() : OptionGroup("Config file options") {
 	/**
 	 * Gets the path for the default SSH config. It reads the current user folder from the proper environment variable, based on the current [Platform.osFamily]
 	 */
+	@OptIn(ExperimentalNativeApi::class, ExperimentalForeignApi::class)
 	private fun getDefaultConfig(): String = when (Platform.osFamily) {
 		OsFamily.WINDOWS -> getenv("USERPROFILE")?.toKString()?.plus("\\.ssh\\config")
 		else -> getenv("HOME")?.toKString()?.plus("/.ssh/config")
