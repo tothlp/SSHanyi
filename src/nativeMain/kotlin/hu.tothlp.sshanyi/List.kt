@@ -4,6 +4,8 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.context
 import com.github.ajalt.clikt.output.MordantHelpFormatter
 import com.github.ajalt.clikt.parameters.groups.provideDelegate
+import com.github.ajalt.clikt.parameters.options.flag
+import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.mordant.terminal.Terminal
 import com.github.ajalt.mordant.table.table
 import okio.FileSystem
@@ -16,6 +18,7 @@ import kotlin.math.ceil
 class List : CliktCommand(help = "List configuration entries") {
     private val defaultPadding = 10
     private val configOptions by ConfigOptions()
+    private val legacy by option("--legacy", "-l", help = "Use legacy printing").flag( default = false)
 
     init {
         context { helpFormatter = {MordantHelpFormatter(it) }
@@ -23,7 +26,7 @@ class List : CliktCommand(help = "List configuration entries") {
     }
 
     override fun run() {
-        readLines(configOptions.config, configOptions.legacy)
+        readLines(configOptions.config, legacy)
     }
 
     private fun readLines(path: Path, legacy: Boolean) {
