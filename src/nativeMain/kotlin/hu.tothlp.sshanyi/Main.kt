@@ -32,7 +32,8 @@ class SSHanyi : CliktCommand(name = "SSHanyi") {
  * @since 0.1.0
  */
 fun main(args: Array<String>) = SSHanyi().subcommands(
+	Init(),
 	Add(),
 	List(),
-	Useless()
+	Useless(),
 ).main(args)
