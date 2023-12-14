@@ -1,9 +1,13 @@
+import java.io.FileInputStream
+import java.io.InputStreamReader
+import java.util.Properties
+
 plugins {
     kotlin("multiplatform") version "1.9.21"
 }
 
 group = "hu.tothlp"
-version = "1.0"
+version = getLocalProperty("version")
 
 repositories {
     mavenCentral()
@@ -32,7 +36,6 @@ kotlin {
             dependencies {
                 implementation("com.github.ajalt.clikt:clikt:4.2.0")
                 implementation("com.squareup.okio:okio:3.6.0")
-
             }
         }
 
@@ -43,4 +46,15 @@ kotlin {
 tasks.withType<Wrapper> {
     gradleVersion = "8.1.1"
     distributionType = Wrapper.DistributionType.BIN
+}
+
+fun getLocalProperty(key: String, file: String = "src/nativeMain/resources/version.properties"): Any {
+    val properties = Properties()
+    File(file).takeIf{it.isFile}?.let {
+        InputStreamReader(FileInputStream(it), Charsets.UTF_8).use { reader ->
+            properties.load(reader)
+        }
+    } ?: error("File from not found")
+
+    return properties.getProperty(key)
 }

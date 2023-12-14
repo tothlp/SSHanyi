@@ -5,6 +5,9 @@ import com.github.ajalt.clikt.core.context
 import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.output.MordantHelpFormatter
 import com.github.ajalt.clikt.parameters.options.versionOption
+import okio.FileSystem
+import okio.Path
+import okio.Path.Companion.toPath
 
 /** Main application class.
  *
@@ -15,13 +18,30 @@ import com.github.ajalt.clikt.parameters.options.versionOption
 class SSHanyi : CliktCommand(name = "SSHanyi") {
 
 	init {
-		versionOption("1.0", names = setOf("-v", "--version"))
+		val properties = readLines("version.properties".toPath())
+		val version = properties["version"] ?: "n/a"
+		versionOption(version, names = setOf("-v", "--version"))
 		context {
 			helpFormatter = { MordantHelpFormatter(it) }
 		}
 	}
 
 	override fun run() {}
+
+	private fun readLines(path: Path): MutableMap<String, String> {
+		val properties = mutableMapOf<String, String>()
+		FileSystem.SYSTEM.read(path) {
+			while (true) {
+				val line = readUtf8Line()?.trim() ?: break
+				val data = line.split("=").map { it.trim() }
+				data.takeIf { it.isNotEmpty() }?.let {
+					properties.put(it[0], data.getOrNull(1).toString())
+				}
+			}
+		}
+		println(properties)
+		return properties
+	}
 }
 
 /**
