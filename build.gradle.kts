@@ -36,7 +36,11 @@ kotlin {
             }
         }
 
-        val nativeTest by getting
+        val nativeTest by getting {
+            dependencies {
+                implementation(kotlin("test"))
+            }
+        }
     }
 }
 
