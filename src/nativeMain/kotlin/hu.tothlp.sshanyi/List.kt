@@ -26,11 +26,12 @@ class List : CliktCommand(help = "List configuration entries") {
     }
 
     override fun run() {
-        readLines(configOptions.config, legacy)
+        val configEntries = readLines(configOptions.config)
+        if(legacy) legacyPrintTable(configEntries) else printTable(configEntries)
     }
 
-    private fun readLines(path: Path, legacy: Boolean) {
-        var configEntries = mutableListOf<SSHConfig>()
+     fun readLines(path: Path): MutableList<SSHConfig> {
+        val configEntries = mutableListOf<SSHConfig>()
         var currentConfig: SSHConfig? = null
 
         FileSystem.SYSTEM.source(path).use { fileSource ->
@@ -56,7 +57,7 @@ class List : CliktCommand(help = "List configuration entries") {
                 }
             }
         }
-        if(legacy) legacyPrintTable(configEntries) else printTable(configEntries)
+        return configEntries
     }
 
     private fun printTable(entries: List<SSHConfig>) {
