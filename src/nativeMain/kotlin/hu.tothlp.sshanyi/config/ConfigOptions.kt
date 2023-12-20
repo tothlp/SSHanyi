@@ -1,10 +1,11 @@
-package hu.tothlp.sshanyi
+package hu.tothlp.sshanyi.config
 
 import com.github.ajalt.clikt.parameters.groups.OptionGroup
 import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.validate
+import hu.tothlp.sshanyi.getDefaultConfig
 import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toPath

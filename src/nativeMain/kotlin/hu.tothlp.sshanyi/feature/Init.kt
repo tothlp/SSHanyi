@@ -1,10 +1,11 @@
-package hu.tothlp.sshanyi
+package hu.tothlp.sshanyi.feature
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.mordant.rendering.TextStyles.dim
 import com.github.ajalt.mordant.rendering.TextStyles.italic
 import com.github.ajalt.mordant.terminal.Terminal
 import com.github.ajalt.mordant.terminal.YesNoPrompt
+import hu.tothlp.sshanyi.getDefaultConfig
 import okio.FileSystem
 import okio.Path.Companion.toPath
 import okio.buffer

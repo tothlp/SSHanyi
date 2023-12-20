@@ -1,4 +1,4 @@
-package hu.tothlp.sshanyi
+package hu.tothlp.sshanyi.config
 
 /**
  * DTO for storing configuration entries.

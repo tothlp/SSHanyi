@@ -1,4 +1,4 @@
-package hu.tothlp.sshanyi
+package hu.tothlp.sshanyi.feature
 
 import com.github.ajalt.clikt.core.CliktCommand
 

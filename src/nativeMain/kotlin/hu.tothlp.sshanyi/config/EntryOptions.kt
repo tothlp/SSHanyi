@@ -1,4 +1,4 @@
-package hu.tothlp.sshanyi
+package hu.tothlp.sshanyi.config
 
 import com.github.ajalt.clikt.parameters.groups.OptionGroup
 import com.github.ajalt.clikt.parameters.options.convert

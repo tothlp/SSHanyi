@@ -5,6 +5,10 @@ import com.github.ajalt.clikt.core.context
 import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.output.MordantHelpFormatter
 import com.github.ajalt.clikt.parameters.options.versionOption
+import hu.tothlp.sshanyi.feature.Add
+import hu.tothlp.sshanyi.feature.Init
+import hu.tothlp.sshanyi.feature.Useless
+import hu.tothlp.sshanyi.feature.List
 
 /** Main application class.
  *
