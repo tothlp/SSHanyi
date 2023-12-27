@@ -1,4 +1,4 @@
-package hu.tothlp.sshanyi.config
+package hu.tothlp.sshanyi.feature.dto
 
 /**
  * DTO for storing configuration entries.
@@ -7,7 +7,8 @@ data class SSHConfig(
     var host: String? = null,
     var hostName: String? = null,
     var user: String? = null,
-    var port: Int? = null
+    var port: Int? = null,
+    var misc: MutableMap<String, Any> = mutableMapOf()
 )
 
 /**

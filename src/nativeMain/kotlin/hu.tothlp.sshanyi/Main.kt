@@ -9,6 +9,7 @@ import hu.tothlp.sshanyi.feature.Add
 import hu.tothlp.sshanyi.feature.Init
 import hu.tothlp.sshanyi.feature.Useless
 import hu.tothlp.sshanyi.feature.List
+import hu.tothlp.sshanyi.feature.Modify
 
 /** Main application class.
  *
@@ -40,4 +41,5 @@ fun main(args: Array<String>) = SSHanyi().subcommands(
 	Add(),
 	List(),
 	Useless(),
+	Modify()
 ).main(args)

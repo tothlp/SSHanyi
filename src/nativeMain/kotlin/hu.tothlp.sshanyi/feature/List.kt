@@ -6,12 +6,13 @@ import com.github.ajalt.clikt.output.MordantHelpFormatter
 import com.github.ajalt.clikt.parameters.groups.provideDelegate
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.mordant.table.Borders
 import com.github.ajalt.mordant.terminal.Terminal
 import com.github.ajalt.mordant.table.table
-import hu.tothlp.sshanyi.config.ConfigName
+import hu.tothlp.sshanyi.feature.dto.ConfigName
 import hu.tothlp.sshanyi.config.ConfigOptions
-import hu.tothlp.sshanyi.config.SSHConfig
-import hu.tothlp.sshanyi.config.toStringOrEmpty
+import hu.tothlp.sshanyi.feature.dto.SSHConfig
+import hu.tothlp.sshanyi.feature.dto.toStringOrEmpty
 import okio.FileSystem
 import okio.Path
 import okio.buffer
@@ -34,19 +35,39 @@ class List : CliktCommand(help = "List configuration entries") {
         if(legacy) legacyPrintTable(configEntries) else printTable(configEntries)
     }
 
-     fun readLines(path: Path): MutableList<SSHConfig> {
+    fun readLines(path: Path): MutableList<SSHConfig> {
         val configEntries = mutableListOf<SSHConfig>()
         var currentConfig: SSHConfig? = null
+        var commentedHost: Boolean = false
+
+        val keyValueRegex = Regex("\\S*")
+        val commentedHostRegex = Regex("#\\s*Host\\s*")
+        val hostRegex = Regex("^\\s*Host\\s*")
 
         FileSystem.SYSTEM.source(path).use { fileSource ->
             fileSource.buffer().use { bufferedFileSource ->
                 while (true) {
-                    val line = bufferedFileSource.readUtf8Line() ?: break
-                    val lineParts = line.trim().replace(Regex("\\s{2,}"), "").split(Regex("\\s"))
-                    if (lineParts.size < 2) continue
-                    val configKey = lineParts[0]
-                    val configValue = lineParts[1]
+                    val line = bufferedFileSource.readUtf8Line()?.trim() ?: break
 
+                    if(commentedHostRegex.containsMatchIn(line)) {
+                        commentedHost = true
+                        continue
+                    }
+                    if(hostRegex.containsMatchIn(line)) commentedHost = false
+                    if(line.startsWith('#') || commentedHost) continue
+
+                    val lineParts = keyValueRegex.findAll(line).map { it.value }.filter { it.isNotBlank() }.toList()
+                    echo(lineParts)
+                    if (lineParts.size < 2) continue
+                    var configKey: String?
+                    var configValue: String?
+                    if (lineParts.size > 2 && lineParts[0].contains('#')) {
+                         configKey = lineParts[1]
+                         configValue = lineParts[2]
+                    } else {
+                         configKey = lineParts[0]
+                         configValue = lineParts[1]
+                    }
                     when (configKey) {
                         ConfigName.HOST.value -> {
                             currentConfig = SSHConfig(configValue)
@@ -56,21 +77,29 @@ class List : CliktCommand(help = "List configuration entries") {
                         ConfigName.HOSTNAME.value -> currentConfig?.hostName = configValue
                         ConfigName.USER.value -> currentConfig?.user = configValue
                         ConfigName.PORT.value -> currentConfig?.port = configValue.toIntOrNull()
+                        else -> currentConfig?.misc?.put(configKey, configValue)
                     }
 
                 }
             }
         }
+        echo(configEntries)
         return configEntries
     }
 
     private fun printTable(entries: List<SSHConfig>) {
         val terminal = Terminal()
+        val miscDataKeys = entries.flatMap { it.misc.keys }.distinct()
         terminal.println(table {
-            header {  row(*ConfigName.entries.map { it.value }.toTypedArray()) }
+            header {  row(*ConfigName.entries.map { it.value }.toTypedArray(), *miscDataKeys.toTypedArray()) }
             body {
+                column(3) {
+                    cellBorders = Borders.ALL
+                    borderType = 
+                }
                 entries.forEach {
-                    row(it.host, it.hostName, it.user, it.port)
+                    val miscData = miscDataKeys.map { key -> it.misc[key] }
+                    row(it.host, it.hostName, it.user, it.port, *miscData.toTypedArray())
                 }
             }
         })
